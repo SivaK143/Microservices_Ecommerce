@@ -50,8 +50,12 @@ public class ProductController {
     @Value("${server.port}")
     private String port;
 
-    @GetMapping("/instance")
-    public String getProducts() {
+    @GetMapping("/instance/{number}")
+    public String getProducts(@PathVariable int number) {
+        if(number%2==0){
+            log.info("Simulated failure for number: {}",number);
+            throw new RuntimeException(String.format("Simulated failure for number: %d ",number));
+        }
         log.info("Request served by port: {}", port);
         return "Response from port: " + port;
     }

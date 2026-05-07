@@ -3,6 +3,8 @@ package com.ecommerce.controller;
 import com.ecommerce.dto.OrderRequestDTO;
 import com.ecommerce.dto.OrderResponseDTO;
 import com.ecommerce.service.OrderService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,10 +53,29 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getAllOrders());
     }
 
-    @GetMapping("/test")
-    public String testLoadBalancing() {
+    @CircuitBreaker(name = "testCircuitBreaker", fallbackMethod = "findPortFallback")
+    @Retry(name = "testRetry")
+    @GetMapping("/test/{number}")
+    public String testLoadBalancing(@PathVariable int number) {
+        log.info("==========In findPort Method ==========");
         return restClient.get()
-                .uri("http://product-service/products/instance")
+                .uri("http://product-service/products/instance/{number}",number)
+                .retrieve()
+                .body(String.class);
+    }
+
+    public String findPortFallback(@PathVariable int number, Throwable exception){
+        log.info("==========In findPortFallback ==========");
+        log.error("product service failed for number due to {}",exception.getMessage());
+        return "default port : 8080";
+    }
+
+
+    @Retry(name = "testRetryAttempts")
+    @GetMapping("/test-product")
+    public String callProductService() {
+        return restClient.get()
+                .uri("http://product-service/test/test")
                 .retrieve()
                 .body(String.class);
     }
