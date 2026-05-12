@@ -1,5 +1,7 @@
 package com.ecommerce.config;
 
+import com.ecommerce.exception.ForbiddenHandler;
+import com.ecommerce.exception.UnauthorizedHandler;
 import com.ecommerce.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +18,8 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final UnauthorizedHandler unauthorizedHandler;
+    private final ForbiddenHandler forbiddenHandler;
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http){
@@ -45,7 +49,10 @@ public class SecurityConfig {
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 //disable basic login form
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .formLogin(ServerHttpSecurity.FormLoginSpec::disable);
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .exceptionHandling(ex->
+                        ex.authenticationEntryPoint(unauthorizedHandler)
+                                .accessDeniedHandler(forbiddenHandler));
                return http.build();
     }
 }
