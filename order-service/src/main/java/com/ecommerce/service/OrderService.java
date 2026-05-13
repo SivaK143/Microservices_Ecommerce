@@ -6,6 +6,7 @@ import com.ecommerce.dto.OrderResponseDTO;
 import com.ecommerce.dto.ProductDTO;
 import com.ecommerce.entity.Order;
 import com.ecommerce.entity.OrderItem;
+import com.ecommerce.entity.ProductClient;
 import com.ecommerce.enums.OrderStatus;
 import com.ecommerce.mapper.OrderMapper;
 import com.ecommerce.repository.OrderRepository;
@@ -22,11 +23,12 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final RestClient restClient;
+//    private final RestClient restClient;
     private final JwtService jwtService;
+    private final ProductClient productClient;
 
-    public OrderService(RestClient restClient, JwtService jwtService, OrderRepository orderRepository) {
-        this.restClient = restClient;
+    public OrderService(ProductClient productClient, JwtService jwtService, OrderRepository orderRepository) {
+        this.productClient = productClient;
         this.orderRepository=orderRepository;
         this.jwtService=jwtService;
     }
@@ -45,12 +47,14 @@ public class OrderService {
 
         for (OrderItemRequestDTO itemDTO : request.getItems()) {
 
-            //  RestClient call
-            ProductDTO product = restClient.get()
-                    .uri("http://localhost:8082/products/{id}", itemDTO.getProductId())
-                    .retrieve()
-                    .body(ProductDTO.class);
+//            //  RestClient call
+//            ProductDTO product = restClient.get()
+//                    .uri("http://localhost:8082/products/{id}", itemDTO.getProductId())
+//                    .retrieve()
+//                    .body(ProductDTO.class);
 
+            //open feign
+            ProductDTO product = productClient.getProductById(itemDTO.getProductId());
             if (product == null) {
                 throw new RuntimeException("Product not found");
             }
