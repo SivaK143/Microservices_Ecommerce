@@ -2,6 +2,7 @@ package com.ecommerce.controller;
 
 import com.ecommerce.dto.OrderRequestDTO;
 import com.ecommerce.dto.OrderResponseDTO;
+import com.ecommerce.entity.ProductClient;
 import com.ecommerce.service.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -20,10 +21,10 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
-    private final RestClient restClient;
-
-    public OrderController(RestClient.Builder builder, OrderService orderService) {
-        this.restClient = builder.build();
+//    private final RestClient restClient;
+    private final ProductClient productClient;
+    public OrderController(ProductClient productClient, OrderService orderService) {
+        this.productClient = productClient;
         this.orderService=orderService;
     }
 
@@ -58,10 +59,11 @@ public class OrderController {
     @GetMapping("/test/{number}")
     public String testLoadBalancing(@PathVariable int number) {
         log.info("==========In findPort Method ==========");
-        return restClient.get()
-                .uri("http://product-service/products/instance/{number}",number)
-                .retrieve()
-                .body(String.class);
+//        return restClient.get()
+//                .uri("http://product-service/products/instance/{number}",number)
+//                .retrieve()
+//                .body(String.class);
+        return productClient.getProducts(number);
     }
 
     public String findPortFallback(@PathVariable int number, Throwable exception){
@@ -74,10 +76,11 @@ public class OrderController {
     @Retry(name = "testRetryAttempts")
     @GetMapping("/test-product")
     public String callProductService() {
-        return restClient.get()
-                .uri("http://product-service/test/test")
-                .retrieve()
-                .body(String.class);
+//        return restClient.get()
+//                .uri("http://product-service/test/test")
+//                .retrieve()
+//                .body(String.class);
+        return productClient.getMessage();
     }
 
     }
