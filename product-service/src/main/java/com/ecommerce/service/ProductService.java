@@ -9,10 +9,12 @@ import com.ecommerce.mapper.ProductMapper;
 import com.ecommerce.repository.CategoryRepository;
 import com.ecommerce.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -46,6 +48,7 @@ public class ProductService {
     //getBy id
 
     public ProductResponseDTO getById(Long id) {
+        log.info("product with product {}", id);
         Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
         return ProductMapper.toDTO(product);
     }

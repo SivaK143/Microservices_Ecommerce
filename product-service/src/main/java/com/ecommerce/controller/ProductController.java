@@ -52,6 +52,7 @@ public class ProductController {
 
     @GetMapping("/instance/{number}")
     public String getProducts(@PathVariable int number) {
+        log.info("call from order service with number {}", number);
         if(number%2==0){
             log.info("Simulated failure for number: {}",number);
             throw new RuntimeException(String.format("Simulated failure for number: %d ",number));
