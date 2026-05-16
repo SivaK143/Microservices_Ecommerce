@@ -1,18 +1,14 @@
 package com.ecommerce.service;
 
-import com.ecommerce.dto.OrderItemRequestDTO;
-import com.ecommerce.dto.OrderRequestDTO;
-import com.ecommerce.dto.OrderResponseDTO;
-import com.ecommerce.dto.ProductDTO;
+import com.ecommerce.Kafka.OrderProducer;
+import com.ecommerce.dto.*;
 import com.ecommerce.entity.Order;
 import com.ecommerce.entity.OrderItem;
 import com.ecommerce.entity.ProductClient;
 import com.ecommerce.enums.OrderStatus;
 import com.ecommerce.mapper.OrderMapper;
 import com.ecommerce.repository.OrderRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,11 +22,13 @@ public class OrderService {
 //    private final RestClient restClient;
     private final JwtService jwtService;
     private final ProductClient productClient;
+    private final OrderProducer orderProducer;
 
-    public OrderService(ProductClient productClient, JwtService jwtService, OrderRepository orderRepository) {
+    public OrderService(ProductClient productClient, JwtService jwtService, OrderRepository orderRepository, OrderProducer orderProducer) {
         this.productClient = productClient;
         this.orderRepository=orderRepository;
         this.jwtService=jwtService;
+        this.orderProducer=orderProducer;
     }
 
     public void placeOrder(OrderRequestDTO request, String token) {
@@ -74,7 +72,15 @@ public class OrderService {
         order.setItems(orderItems);
         order.setTotalAmount(totalAmount);
 
-        orderRepository.save(order);
+       Order savedOrder = orderRepository.save(order);
+        OrderEvent event = new OrderEvent(
+                savedOrder.getId(),
+                savedOrder.getItems().get(0).getProductName(),
+                savedOrder.getItems().get(0).getQuantity(),
+                savedOrder.getOrderDate()
+        );
+
+        orderProducer.sendOrderEvent(event);
     }
 
     //get Myorders
